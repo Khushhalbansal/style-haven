@@ -216,7 +216,7 @@ function ProductForm({ initial, categories, onClose, onSaved }: {
           id: initial.id,
           name, slug: finalSlug, description, price_cents: Number(priceCents),
           currency, quantity: Number(quantity), category_id: categoryId || null,
-          sizes: sizesText.split(",").map((s) => s.trim()).filter(Boolean),
+          sizes: sizesText.split(",").map((s: string) => s.trim()).filter(Boolean),
           images, is_active: isActive,
         },
       });
