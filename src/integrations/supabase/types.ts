@@ -14,13 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_visible: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_visible?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_visible?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          items: Json
+          notes: string | null
+          shipping_address: string
+          shipping_city: string
+          shipping_country: string
+          shipping_postal: string | null
+          status: string
+          subtotal_cents: number
+          total_cents: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          items: Json
+          notes?: string | null
+          shipping_address: string
+          shipping_city: string
+          shipping_country?: string
+          shipping_postal?: string | null
+          status?: string
+          subtotal_cents?: number
+          total_cents?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          shipping_address?: string
+          shipping_city?: string
+          shipping_country?: string
+          shipping_postal?: string | null
+          status?: string
+          subtotal_cents?: number
+          total_cents?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          images: string[]
+          is_active: boolean
+          name: string
+          price_cents: number
+          quantity: number
+          sizes: string[]
+          slug: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[]
+          is_active?: boolean
+          name: string
+          price_cents?: number
+          quantity?: number
+          sizes?: string[]
+          slug: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[]
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          quantity?: number
+          sizes?: string[]
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          admin_notification_email: string
+          brand_name: string
+          footer_tagline: string | null
+          hero_eyebrow: string | null
+          hero_headline: string | null
+          hero_image_url: string | null
+          hero_subhead: string | null
+          homepage_category_ids: string[]
+          id: number
+          logo_url: string | null
+          marquee_items: string[]
+          upcoming_body: string | null
+          upcoming_image_url: string | null
+          upcoming_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notification_email?: string
+          brand_name?: string
+          footer_tagline?: string | null
+          hero_eyebrow?: string | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
+          hero_subhead?: string | null
+          homepage_category_ids?: string[]
+          id?: number
+          logo_url?: string | null
+          marquee_items?: string[]
+          upcoming_body?: string | null
+          upcoming_image_url?: string | null
+          upcoming_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notification_email?: string
+          brand_name?: string
+          footer_tagline?: string | null
+          hero_eyebrow?: string | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
+          hero_subhead?: string | null
+          homepage_category_ids?: string[]
+          id?: number
+          logo_url?: string | null
+          marquee_items?: string[]
+          upcoming_body?: string | null
+          upcoming_image_url?: string | null
+          upcoming_title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
