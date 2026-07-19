@@ -21,8 +21,23 @@ function renderRows(items: Array<Record<string, unknown>>, currency: string) {
 }
 
 async function sendEmail(to: string, subject: string, html: string, brand: string) {
-  const resendKey = process.env.RESEND_API_KEY || "a1c3cadd-e0ce-4936-a02e-2215ffa69960";
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) {
+    console.warn("[notify] RESEND_API_KEY is not configured — skipping email sending.");
+    return;
+  }
   
+  // Clean brand name to be safe for display name (alphanumeric and spaces only)
+  const safeBrand = brand.replace(/[^a-zA-Z0-9 ]/g, "");
+
+  if (!resendKey.startsWith("re_")) {
+    console.warn(
+      `[notify] WARNING: The Resend API Key "${resendKey.slice(0, 8)}..." does not start with "re_". ` +
+      `You may have copied the "API Key ID" (a UUID) from the Resend dashboard instead of the actual "API Key" token. ` +
+      `Please generate a new API key in the Resend dashboard, copy the token starting with "re_", and set it as RESEND_API_KEY.`
+    );
+  }
+
   // Try sending directly via Resend API
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -32,17 +47,18 @@ async function sendEmail(to: string, subject: string, html: string, brand: strin
         Authorization: `Bearer ${resendKey}`,
       },
       body: JSON.stringify({
-        from: `${brand} <onboarding@resend.dev>`,
+        from: `${safeBrand} <onboarding@resend.dev>`,
         to: [to],
         subject,
         html,
       }),
     });
+    const text = await res.text();
     if (res.ok) {
-      console.log("[notify] Email sent successfully via Resend API directly to", to);
+      console.log(`[notify] Email sent successfully via Resend API directly to ${to}`);
       return;
     }
-    console.warn(`[notify] Direct Resend API failed ${res.status}: ${await res.text()}. Trying Lovable gateway fallback.`);
+    console.warn(`[notify] Direct Resend API failed ${res.status}: ${text}. Trying Lovable gateway fallback.`);
   } catch (err) {
     console.error("[notify] Direct Resend API error:", err);
   }
@@ -63,7 +79,7 @@ async function sendEmail(to: string, subject: string, html: string, brand: strin
         "X-Connection-Api-Key": resendKey,
       },
       body: JSON.stringify({
-        from: `${brand} <onboarding@resend.dev>`,
+        from: `${safeBrand} <onboarding@resend.dev>`,
         to: [to],
         subject,
         html,
@@ -71,6 +87,8 @@ async function sendEmail(to: string, subject: string, html: string, brand: strin
     });
     if (!res.ok) {
       console.error(`[notify] Lovable gateway failed ${res.status}: ${await res.text()}`);
+    } else {
+      console.log(`[notify] Email sent via Lovable gateway fallback to ${to}`);
     }
   } catch (err) {
     console.error("[notify] Lovable gateway error:", err);

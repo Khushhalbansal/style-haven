@@ -182,30 +182,20 @@ export const confirmPayment = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabase = anonClient();
 
-    // 1. Check if order is already paid
-    const { data: order, error: getErr } = await supabase
-      .from("orders")
-      .select("status, payment_intent_id")
-      .eq("id", data.orderId)
-      .maybeSingle();
-
-    if (getErr) throw new Error(getErr.message);
-    if (!order) throw new Error("Order not found");
-    if (order.status === "paid") {
-      return { success: true, alreadyConfirmed: true };
-    }
-
-    // 2. If it's a mock session:
+    // 1. If it's a mock/COD session, confirm it atomically using the database function:
     if (data.sessionId.startsWith("mock_")) {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: "paid", payment_intent_id: data.sessionId })
-        .eq("id", data.orderId);
+      const { data: status, error } = await (supabase.rpc as any)("confirm_order_payment", {
+        _order_id: data.orderId,
+        _payment_intent_id: data.sessionId,
+      });
+
       if (error) throw new Error(error.message);
+      if (status === "not_found") throw new Error("Order not found");
+      if (status === "already_paid") return { success: true, alreadyConfirmed: true };
       return { success: true };
     }
 
-    // 3. If it's a Stripe session:
+    // 2. If it's a Stripe session:
     if (process.env.STRIPE_SECRET_KEY) {
       try {
         const StripeLib = await import("stripe");
@@ -215,11 +205,14 @@ export const confirmPayment = createServerFn({ method: "POST" })
         });
         const session = await stripe.checkout.sessions.retrieve(data.sessionId);
         if (session.payment_status === "paid") {
-          const { error } = await supabase
-            .from("orders")
-            .update({ status: "paid", payment_intent_id: session.id })
-            .eq("id", data.orderId);
+          const { data: status, error } = await (supabase.rpc as any)("confirm_order_payment", {
+            _order_id: data.orderId,
+            _payment_intent_id: session.id,
+          });
+
           if (error) throw new Error(error.message);
+          if (status === "not_found") throw new Error("Order not found");
+          if (status === "already_paid") return { success: true, alreadyConfirmed: true };
           return { success: true };
         } else {
           throw new Error(`Stripe payment status is ${session.payment_status}`);
