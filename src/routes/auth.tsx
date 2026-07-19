@@ -1,20 +1,28 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const searchSchema = z.object({
+  redirect: z.string().optional(),
+});
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Sign in — khushhal's boutique" }] }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [busy, setBusy] = useState(false);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -27,6 +35,10 @@ function AuthPage() {
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "").trim();
     const password = String(fd.get("password") ?? "");
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signup") {
@@ -41,11 +53,17 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      // Redirect: admin -> /admin, otherwise home
+      // Redirect: admin -> /admin, respect redirect param, otherwise home
       const { data: u } = await supabase.auth.getUser();
       if (u.user) {
         const { data: adminCheck } = await supabase.rpc("is_admin", { _user_id: u.user.id });
-        navigate({ to: adminCheck ? "/admin" : "/" });
+        if (adminCheck) {
+          navigate({ to: "/admin" });
+        } else if (redirect && redirect.startsWith("/")) {
+          navigate({ to: redirect as "/" });
+        } else {
+          navigate({ to: "/" });
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Auth failed");
@@ -67,9 +85,35 @@ function AuthPage() {
           <p className="eyebrow">Account</p>
           <h1 className="font-display text-4xl italic mt-4">You're signed in</h1>
           <p className="mt-4 text-sm text-muted-foreground">{session.user?.email}</p>
-          <div className="mt-10 flex justify-center gap-6">
-            <Link to="/" className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest">Continue shopping</Link>
-            <button onClick={signOut} className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest">Sign out</button>
+          <div className="mt-10 flex flex-col items-center gap-4">
+            {redirect && redirect.startsWith("/") ? (
+              <Link
+                to={redirect as "/"}
+                className="w-full h-12 bg-foreground text-background text-[11px] uppercase tracking-[0.3em] inline-flex items-center justify-center hover:bg-primary transition-colors"
+              >
+                Continue to {redirect === "/checkout" ? "Checkout" : redirect.replace("/", "")}
+              </Link>
+            ) : null}
+            <div className="flex justify-center gap-6">
+              <Link
+                to="/account/orders"
+                className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest"
+              >
+                My Orders
+              </Link>
+              <Link
+                to="/"
+                className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest"
+              >
+                Shop
+              </Link>
+              <button
+                onClick={signOut}
+                className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
         </div>
         <SiteFooter />
@@ -86,16 +130,33 @@ function AuthPage() {
           {mode === "signin" ? "Welcome back" : "Create account"}
         </h1>
 
+        {redirect === "/checkout" ? (
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Sign in to continue to checkout. Your cart will be preserved.
+          </p>
+        ) : null}
+
         <form onSubmit={onSubmit} className="mt-12 space-y-5">
           <label className="block">
             <span className="eyebrow mb-2 block">Email</span>
-            <input name="email" type="email" required autoComplete="email"
-              className="w-full bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-foreground" />
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              className="w-full bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-foreground"
+            />
           </label>
           <label className="block">
             <span className="eyebrow mb-2 block">Password</span>
-            <input name="password" type="password" required minLength={6} autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              className="w-full bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-foreground" />
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={6}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              className="w-full bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-foreground"
+            />
           </label>
           <button
             type="submit"
