@@ -131,6 +131,7 @@ export type Database = {
           name: string
           price_cents: number
           quantity: number
+          return_policy: string | null
           sizes: string[]
           slug: string
         }
@@ -145,6 +146,7 @@ export type Database = {
           name: string
           price_cents?: number
           quantity?: number
+          return_policy?: string | null
           sizes?: string[]
           slug: string
         }
@@ -159,6 +161,7 @@ export type Database = {
           name?: string
           price_cents?: number
           quantity?: number
+          return_policy?: string | null
           sizes?: string[]
           slug?: string
         }
@@ -185,10 +188,12 @@ export type Database = {
           id: number
           logo_url: string | null
           marquee_items: string[]
+          support_email: string | null
           upcoming_body: string | null
           upcoming_image_url: string | null
           upcoming_title: string | null
           updated_at: string
+          whatsapp_number: string | null
         }
         Insert: {
           admin_notification_email?: string
@@ -202,10 +207,12 @@ export type Database = {
           id?: number
           logo_url?: string | null
           marquee_items?: string[]
+          support_email?: string | null
           upcoming_body?: string | null
           upcoming_image_url?: string | null
           upcoming_title?: string | null
           updated_at?: string
+          whatsapp_number?: string | null
         }
         Update: {
           admin_notification_email?: string
@@ -219,10 +226,12 @@ export type Database = {
           id?: number
           logo_url?: string | null
           marquee_items?: string[]
+          support_email?: string | null
           upcoming_body?: string | null
           upcoming_image_url?: string | null
           upcoming_title?: string | null
           updated_at?: string
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
