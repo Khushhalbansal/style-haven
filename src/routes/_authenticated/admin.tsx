@@ -258,7 +258,7 @@ function ProductForm({
   const [name, setName] = useState(initial.name ?? "");
   const [slug, setSlug] = useState(initial.slug ?? "");
   const [description, setDescription] = useState(initial.description ?? "");
-  const [priceCents, setPriceCents] = useState(initial.price_cents ?? 0);
+  const [priceRupees, setPriceRupees] = useState((initial.price_cents ?? 0) / 100);
   const [currency, setCurrency] = useState(initial.currency ?? "INR");
   const [quantity, setQuantity] = useState(initial.quantity ?? 1);
   const [categoryId, setCategoryId] = useState(initial.category_id ?? categories[0]?.id ?? "");
@@ -298,7 +298,7 @@ function ProductForm({
           name,
           slug: finalSlug,
           description,
-          price_cents: Number(priceCents),
+          price_cents: Math.round(Number(priceRupees) * 100),
           currency,
           quantity: Number(quantity),
           category_id: categoryId || null,
@@ -362,11 +362,12 @@ function ProductForm({
         </FormField>
 
         <div className="grid sm:grid-cols-3 gap-4">
-          <FormField label="Price (in paise/cents)">
+          <FormField label="Price (in Rupees/INR)">
             <input
               type="number"
-              value={priceCents}
-              onChange={(e) => setPriceCents(Number(e.target.value))}
+              step="any"
+              value={priceRupees}
+              onChange={(e) => setPriceRupees(Number(e.target.value))}
               className={inputCls}
             />
           </FormField>
