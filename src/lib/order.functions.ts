@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 const itemSchema = z.object({
@@ -22,6 +22,7 @@ const inputSchema = z.object({
   shipping_country: z.string().default("India"),
   notes: z.string().optional(),
   items: z.array(itemSchema).min(1),
+  user_id: z.string().uuid().optional(),
 });
 
 function anonClient() {
@@ -32,7 +33,8 @@ function anonClient() {
     global: {
       fetch: (input, init) => {
         const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
+          h.delete("Authorization");
         h.set("apikey", key);
         return fetch(input, { ...init, headers: h });
       },
@@ -41,7 +43,7 @@ function anonClient() {
 }
 
 export const placeOrder = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .validator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
     const supabase = anonClient();
 
@@ -59,6 +61,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     const priced = data.items.map((i) => {
       const p = map.get(i.productId);
       if (!p || !p.is_active) throw new Error(`Product unavailable: ${i.name}`);
+      if (p.quantity < i.quantity) {
+        throw new Error(`Insufficient stock for ${i.name}. Only ${p.quantity} available.`);
+      }
       const price = p.price_cents;
       subtotal += price * i.quantity;
       return {
@@ -74,26 +79,71 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const total = subtotal; // shipping / tax = placeholder 0
 
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({
-        customer_name: data.customer_name,
-        customer_email: data.customer_email,
-        customer_phone: data.customer_phone ?? null,
-        shipping_address: data.shipping_address,
-        shipping_city: data.shipping_city,
-        shipping_postal: data.shipping_postal ?? null,
-        shipping_country: data.shipping_country ?? "India",
-        items: priced,
-        subtotal_cents: subtotal,
-        total_cents: total,
-        currency,
-        notes: data.notes ?? null,
-        status: "pending",
-      })
-      .select("id")
-      .single();
-    if (error || !order) throw new Error(error?.message ?? "Failed to place order");
+    // Call place_order_atomic RPC to atomically validate/decrement stock and insert order
+    const { data: orderId, error } = await supabase.rpc("place_order_atomic", {
+      _customer_name: data.customer_name,
+      _customer_email: data.customer_email,
+      _customer_phone: data.customer_phone ?? null,
+      _shipping_address: data.shipping_address,
+      _shipping_city: data.shipping_city,
+      _shipping_postal: data.shipping_postal ?? null,
+      _shipping_country: data.shipping_country ?? "India",
+      _items: priced as unknown as Json,
+      _subtotal_cents: subtotal,
+      _total_cents: total,
+      _currency: currency,
+      _notes: data.notes ?? null,
+      _user_id: data.user_id ?? null,
+    });
+
+    if (error || !orderId) throw new Error(error?.message ?? "Failed to place order");
+    const order = { id: orderId };
+
+    // Stripe checkout session creation
+    let checkoutUrl = `/checkout/mock-payment?orderId=${order.id}`;
+
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        const StripeLib = await import("stripe");
+        const stripe = new StripeLib.default(process.env.STRIPE_SECRET_KEY, {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          apiVersion: "2025-01-27.acacia" as any,
+        });
+
+        const appUrl = process.env.APP_URL || "http://localhost:8080";
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          line_items: priced.map((item) => ({
+            price_data: {
+              currency: item.currency.toLowerCase(),
+              product_data: {
+                name: item.name + (item.size ? ` (${item.size})` : ""),
+              },
+              unit_amount: item.priceCents,
+            },
+            quantity: item.quantity,
+          })),
+          mode: "payment",
+          success_url: `${appUrl}/order/${order.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${appUrl}/checkout`,
+          metadata: {
+            orderId: order.id,
+          },
+        });
+
+        if (session.url) {
+          checkoutUrl = session.url;
+          // Store session id as payment_intent_id in DB
+          await supabase
+            .from("orders")
+            .update({ payment_intent_id: session.id })
+            .eq("id", order.id);
+        }
+      } catch (stripeErr) {
+        console.error("[Stripe] Failed to create checkout session:", stripeErr);
+        // Fall back to mock payment if Stripe fails during configuration issues
+      }
+    }
 
     // Fire-and-forget admin notification (never block the order confirmation)
     try {
@@ -102,5 +152,68 @@ export const placeOrder = createServerFn({ method: "POST" })
       console.error("[notify] failed", e);
     }
 
-    return { orderId: order.id };
+    return { orderId: order.id, checkoutUrl };
+  });
+
+const confirmSchema = z.object({
+  orderId: z.string().uuid(),
+  sessionId: z.string(),
+});
+
+export const confirmPayment = createServerFn({ method: "POST" })
+  .validator((data: unknown) => confirmSchema.parse(data))
+  .handler(async ({ data }) => {
+    const supabase = anonClient();
+
+    // 1. Check if order is already paid
+    const { data: order, error: getErr } = await supabase
+      .from("orders")
+      .select("status, payment_intent_id")
+      .eq("id", data.orderId)
+      .maybeSingle();
+
+    if (getErr) throw new Error(getErr.message);
+    if (!order) throw new Error("Order not found");
+    if (order.status === "paid") {
+      return { success: true, alreadyConfirmed: true };
+    }
+
+    // 2. If it's a mock session:
+    if (data.sessionId.startsWith("mock_")) {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "paid", payment_intent_id: data.sessionId })
+        .eq("id", data.orderId);
+      if (error) throw new Error(error.message);
+      return { success: true };
+    }
+
+    // 3. If it's a Stripe session:
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        const StripeLib = await import("stripe");
+        const stripe = new StripeLib.default(process.env.STRIPE_SECRET_KEY, {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          apiVersion: "2025-01-27.acacia" as any,
+        });
+        const session = await stripe.checkout.sessions.retrieve(data.sessionId);
+        if (session.payment_status === "paid") {
+          const { error } = await supabase
+            .from("orders")
+            .update({ status: "paid", payment_intent_id: session.id })
+            .eq("id", data.orderId);
+          if (error) throw new Error(error.message);
+          return { success: true };
+        } else {
+          throw new Error(`Stripe payment status is ${session.payment_status}`);
+        }
+      } catch (stripeErr) {
+        console.error("[Stripe] Failed to retrieve session or update order:", stripeErr);
+        throw new Error(
+          stripeErr instanceof Error ? stripeErr.message : "Payment verification failed",
+        );
+      }
+    }
+
+    throw new Error("Stripe is not configured and a mock session was not provided.");
   });
