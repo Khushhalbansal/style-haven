@@ -70,14 +70,6 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Account created.");
-      } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-        if (error) throw error;
-        toast.success("Password reset email sent. Check your inbox.");
-        setMode("signin");
-        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

@@ -21,30 +21,62 @@ function renderRows(items: Array<Record<string, unknown>>, currency: string) {
 }
 
 async function sendEmail(to: string, subject: string, html: string, brand: string) {
+  const resendKey = process.env.RESEND_API_KEY || "a1c3cadd-e0ce-4936-a02e-2215ffa69960";
+  
+  // Try sending directly via Resend API
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendKey}`,
+      },
+      body: JSON.stringify({
+        from: `${brand} <onboarding@resend.dev>`,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+    if (res.ok) {
+      console.log("[notify] Email sent successfully via Resend API directly to", to);
+      return;
+    }
+    console.warn(`[notify] Direct Resend API failed ${res.status}: ${await res.text()}. Trying Lovable gateway fallback.`);
+  } catch (err) {
+    console.error("[notify] Direct Resend API error:", err);
+  }
+
+  // Fallback to Lovable connector gateway if available
   const lovableKey = process.env.LOVABLE_API_KEY;
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!lovableKey || !resendKey) {
-    console.warn("[notify] Resend not configured — skipping email to", to);
+  if (!lovableKey) {
+    console.warn("[notify] Lovable gateway not configured (missing LOVABLE_API_KEY) — email send complete/failed.");
     return;
   }
-  const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": resendKey,
-    },
-    body: JSON.stringify({
-      from: `${brand} <onboarding@resend.dev>`,
-      to: [to],
-      subject,
-      html,
-    }),
-  });
-  if (!res.ok) {
-    console.error(`[notify] resend failed ${res.status}: ${await res.text()}`);
+  
+  try {
+    const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": resendKey,
+      },
+      body: JSON.stringify({
+        from: `${brand} <onboarding@resend.dev>`,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+    if (!res.ok) {
+      console.error(`[notify] Lovable gateway failed ${res.status}: ${await res.text()}`);
+    }
+  } catch (err) {
+    console.error("[notify] Lovable gateway error:", err);
   }
 }
+
 
 export async function notifyAdminNewOrder(orderId: string) {
   const ctx = await loadOrderAndSettings(orderId);
@@ -74,7 +106,7 @@ export async function notifyCustomerOrderPlaced(orderId: string) {
   if (!ctx) return;
   const { order, settings } = ctx;
   const brand = settings?.brand_name ?? "khushhal's boutique";
-  const support = settings?.support_email ?? settings?.admin_notification_email ?? "";
+  const support = settings?.admin_notification_email ?? "";
   const items = Array.isArray(order.items) ? (order.items as Array<Record<string, unknown>>) : [];
   const total = order.total_cents / 100;
   const html = `

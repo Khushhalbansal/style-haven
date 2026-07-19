@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSnapshot } from "@/lib/site.functions";
 
-export const Route = createFileRoute("/checkout")({
+export const Route = createFileRoute("/checkout/")({
   head: () => ({ meta: [{ title: "Checkout — khushhal's boutique" }] }),
   component: CheckoutPage,
 });

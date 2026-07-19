@@ -27,8 +27,8 @@ const inputSchema = z.object({
 });
 
 function anonClient() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+  const url = process.env.SUPABASE_URL ?? "https://ijnpmdjxyabudclzudnn.supabase.co";
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_FOD-4hJz5ewYFPkD9Olu9A_cxTIgelB";
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {

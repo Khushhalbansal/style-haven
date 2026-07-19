@@ -13,11 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
-import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as CheckoutMockPaymentRouteImport } from './routes/checkout.mock-payment'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
@@ -42,15 +44,20 @@ const CartRoute = CartRouteImport.update({
   path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CheckoutRoute = CheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
@@ -67,10 +74,15 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
+  id: '/checkout/',
+  path: '/checkout/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutMockPaymentRoute = CheckoutMockPaymentRouteImport.update({
-  id: '/mock-payment',
-  path: '/mock-payment',
-  getParentRoute: () => CheckoutRoute,
+  id: '/checkout/mock-payment',
+  path: '/checkout/mock-payment',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const OrderIdRoute = OrderIdRouteImport.update({
   id: '/order/$id',
@@ -92,28 +104,32 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
-  '/checkout': typeof CheckoutRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/account/orders': typeof AccountOrdersRoute
   '/category/$slug': typeof CategorySlugRoute
   '/checkout/mock-payment': typeof CheckoutMockPaymentRoute
   '/order/$id': typeof OrderIdRouteWithChildren
   '/product/$id': typeof ProductIdRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/order/$id/confirmation': typeof OrderIdConfirmationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
-  '/checkout': typeof CheckoutRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/account/orders': typeof AccountOrdersRoute
   '/category/$slug': typeof CategorySlugRoute
   '/checkout/mock-payment': typeof CheckoutMockPaymentRoute
   '/order/$id': typeof OrderIdRouteWithChildren
   '/product/$id': typeof ProductIdRoute
+  '/checkout': typeof CheckoutIndexRoute
   '/order/$id/confirmation': typeof OrderIdConfirmationRoute
 }
 export interface FileRoutesById {
@@ -122,14 +138,16 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
-  '/checkout': typeof CheckoutRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/account/orders': typeof AccountOrdersRoute
   '/category/$slug': typeof CategorySlugRoute
   '/checkout/mock-payment': typeof CheckoutMockPaymentRoute
   '/order/$id': typeof OrderIdRouteWithChildren
   '/product/$id': typeof ProductIdRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/order/$id/confirmation': typeof OrderIdConfirmationRoute
 }
 export interface FileRouteTypes {
@@ -138,28 +156,32 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cart'
-    | '/checkout'
+    | '/reset-password'
     | '/search'
+    | '/account'
     | '/admin'
     | '/account/orders'
     | '/category/$slug'
     | '/checkout/mock-payment'
     | '/order/$id'
     | '/product/$id'
+    | '/checkout/'
     | '/order/$id/confirmation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/cart'
-    | '/checkout'
+    | '/reset-password'
     | '/search'
+    | '/account'
     | '/admin'
     | '/account/orders'
     | '/category/$slug'
     | '/checkout/mock-payment'
     | '/order/$id'
     | '/product/$id'
+    | '/checkout'
     | '/order/$id/confirmation'
   id:
     | '__root__'
@@ -167,14 +189,16 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/cart'
-    | '/checkout'
+    | '/reset-password'
     | '/search'
+    | '/_authenticated/account'
     | '/_authenticated/admin'
     | '/account/orders'
     | '/category/$slug'
     | '/checkout/mock-payment'
     | '/order/$id'
     | '/product/$id'
+    | '/checkout/'
     | '/order/$id/confirmation'
   fileRoutesById: FileRoutesById
 }
@@ -183,12 +207,14 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
-  CheckoutRoute: typeof CheckoutRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   AccountOrdersRoute: typeof AccountOrdersRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  CheckoutMockPaymentRoute: typeof CheckoutMockPaymentRoute
   OrderIdRoute: typeof OrderIdRouteWithChildren
   ProductIdRoute: typeof ProductIdRoute
+  CheckoutIndexRoute: typeof CheckoutIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,11 +247,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -234,6 +260,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -256,12 +289,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/': {
+      id: '/checkout/'
+      path: '/checkout'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof CheckoutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/mock-payment': {
       id: '/checkout/mock-payment'
-      path: '/mock-payment'
+      path: '/checkout/mock-payment'
       fullPath: '/checkout/mock-payment'
       preLoaderRoute: typeof CheckoutMockPaymentRouteImport
-      parentRoute: typeof CheckoutRoute
+      parentRoute: typeof rootRouteImport
     }
     '/order/$id': {
       id: '/order/$id'
@@ -284,13 +324,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderIdConfirmationRouteImport
       parentRoute: typeof OrderIdRoute
     }
-    '/_authenticated/account': {
-      id: '/_authenticated/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AuthenticatedAccountRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
@@ -306,18 +339,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
-
-interface CheckoutRouteChildren {
-  CheckoutMockPaymentRoute: typeof CheckoutMockPaymentRoute
-}
-
-const CheckoutRouteChildren: CheckoutRouteChildren = {
-  CheckoutMockPaymentRoute: CheckoutMockPaymentRoute,
-}
-
-const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
-  CheckoutRouteChildren,
-)
 
 interface OrderIdRouteChildren {
   OrderIdConfirmationRoute: typeof OrderIdConfirmationRoute
@@ -335,12 +356,14 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
-  CheckoutRoute: CheckoutRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   AccountOrdersRoute: AccountOrdersRoute,
   CategorySlugRoute: CategorySlugRoute,
+  CheckoutMockPaymentRoute: CheckoutMockPaymentRoute,
   OrderIdRoute: OrderIdRouteWithChildren,
   ProductIdRoute: ProductIdRoute,
+  CheckoutIndexRoute: CheckoutIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

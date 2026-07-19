@@ -32,7 +32,6 @@ function OrderConfirmation() {
     queryFn: () => getSiteSnapshot(),
   });
   const brandName = site?.settings?.brand_name ?? "khushhal's boutique";
-  const whatsapp = site?.settings?.whatsapp_number ?? "";
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],

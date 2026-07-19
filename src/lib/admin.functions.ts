@@ -154,9 +154,10 @@ export const updateSettings = createServerFn({ method: "POST" })
   .validator((data: unknown) => settingsInput.parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    const { whatsapp_number: _, support_email: __, ...dbData } = data;
     const { error } = await context.supabase
       .from("site_settings")
-      .update({ ...data, updated_at: new Date().toISOString() })
+      .update({ ...dbData, updated_at: new Date().toISOString() })
       .eq("id", 1);
     if (error) throw new Error(error.message);
     return { ok: true };
