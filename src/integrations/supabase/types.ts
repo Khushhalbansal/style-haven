@@ -131,6 +131,7 @@ export type Database = {
           sizes: string[];
           slug: string;
           return_policy: string | null;
+          colors: string[];
         };
         Insert: {
           category_id?: string | null;
@@ -146,6 +147,7 @@ export type Database = {
           sizes?: string[];
           slug: string;
           return_policy?: string | null;
+          colors?: string[];
         };
         Update: {
           category_id?: string | null;
@@ -161,6 +163,7 @@ export type Database = {
           sizes?: string[];
           slug?: string;
           return_policy?: string | null;
+          colors?: string[];
         };
         Relationships: [
           {
