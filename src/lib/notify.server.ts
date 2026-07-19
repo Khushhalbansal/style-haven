@@ -1,13 +1,14 @@
-// Server-only: sends admin + customer email notifications via Resend connector.
+import { supabase } from "@/integrations/supabase/client";
 
 async function loadOrderAndSettings(orderId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: order } = await supabaseAdmin
-    .from("orders").select("*").eq("id", orderId).maybeSingle();
-  if (!order) return null;
-  const { data: settings } = await supabaseAdmin
-    .from("site_settings").select("*").eq("id", 1).maybeSingle();
-  return { order, settings };
+  const { data, error } = await (supabase.rpc as any)("get_order_details_for_notification", {
+    _order_id: orderId,
+  });
+  if (error || !data) {
+    console.error("[notify] Failed to fetch order details via RPC:", error?.message);
+    return null;
+  }
+  return { order: data.order, settings: data.settings };
 }
 
 function renderRows(items: Array<Record<string, unknown>>, currency: string) {
