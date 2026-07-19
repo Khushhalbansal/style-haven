@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
@@ -40,12 +41,27 @@ function anonClient() {
   });
 }
 
+async function extractUserId(): Promise<string | null> {
+  try {
+    const req = getRequest();
+    const auth = req?.headers.get("authorization");
+    if (!auth?.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    if (token.split(".").length !== 3) return null;
+    const supabase = anonClient();
+    const { data } = await supabase.auth.getUser(token);
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const placeOrder = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
     const supabase = anonClient();
+    const userId = await extractUserId();
 
-    // Re-price server-side against DB (never trust client prices)
     const ids = Array.from(new Set(data.items.map((i) => i.productId)));
     const { data: prods, error: prodErr } = await supabase
       .from("products")
@@ -72,11 +88,12 @@ export const placeOrder = createServerFn({ method: "POST" })
       };
     });
 
-    const total = subtotal; // shipping / tax = placeholder 0
+    const total = subtotal;
 
     const { data: order, error } = await supabase
       .from("orders")
       .insert({
+        user_id: userId,
         customer_name: data.customer_name,
         customer_email: data.customer_email,
         customer_phone: data.customer_phone ?? null,
@@ -95,9 +112,10 @@ export const placeOrder = createServerFn({ method: "POST" })
       .single();
     if (error || !order) throw new Error(error?.message ?? "Failed to place order");
 
-    // Fire-and-forget admin notification (never block the order confirmation)
     try {
-      await import("./notify.server").then((m) => m.notifyAdminNewOrder(order.id));
+      const notify = await import("./notify.server");
+      await notify.notifyAdminNewOrder(order.id);
+      await notify.notifyCustomerOrderPlaced(order.id);
     } catch (e) {
       console.error("[notify] failed", e);
     }
