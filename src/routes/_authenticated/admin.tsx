@@ -187,8 +187,10 @@ function ProductForm({ initial, categories, onClose, onSaved }: {
   const [sizesText, setSizesText] = useState((initial.sizes ?? []).join(", "));
   const [images, setImages] = useState<string[]>(initial.images ?? []);
   const [isActive, setIsActive] = useState(initial.is_active ?? true);
+  const [returnPolicy, setReturnPolicy] = useState(initial.return_policy ?? "");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
 
   async function uploadImage(file: File) {
     setUploading(true);
@@ -218,8 +220,10 @@ function ProductForm({ initial, categories, onClose, onSaved }: {
           currency, quantity: Number(quantity), category_id: categoryId || null,
           sizes: sizesText.split(",").map((s: string) => s.trim()).filter(Boolean),
           images, is_active: isActive,
+          return_policy: returnPolicy.trim() || null,
         },
       });
+
       toast.success("Product saved");
       onSaved();
     } catch (e) {
@@ -296,8 +300,13 @@ function ProductForm({ initial, categories, onClose, onSaved }: {
           </div>
         </FormField>
 
+        <FormField label='Return policy (e.g. "7-day return, replacement only")'>
+          <textarea value={returnPolicy} onChange={(e) => setReturnPolicy(e.target.value)} rows={3} placeholder="Shown on the product page. Leave blank to hide." className={inputCls} />
+        </FormField>
+
         <label className="flex items-center gap-3 text-xs uppercase tracking-widest">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+
           Active (visible in store)
         </label>
 
@@ -483,7 +492,10 @@ function SettingsPanel({ data, refetch }: PanelProps) {
     homepage_category_ids: s.homepage_category_ids ?? [],
     admin_notification_email: s.admin_notification_email ?? "",
     footer_tagline: s.footer_tagline ?? "",
+    whatsapp_number: (s as any).whatsapp_number ?? "",
+    support_email: (s as any).support_email ?? "",
   });
+
   const [saving, setSaving] = useState(false);
 
   async function uploadTo(file: File, field: "logo_url" | "hero_image_url" | "upcoming_image_url") {
@@ -511,9 +523,12 @@ function SettingsPanel({ data, refetch }: PanelProps) {
         homepage_category_ids: f.homepage_category_ids,
         admin_notification_email: f.admin_notification_email,
         footer_tagline: f.footer_tagline || null,
+        whatsapp_number: f.whatsapp_number || null,
+        support_email: f.support_email || null,
       } });
       toast.success("Settings saved");
       refetch();
+
     } catch (e) { toast.error((e as Error).message); }
     finally { setSaving(false); }
   }
@@ -617,12 +632,15 @@ function SettingsPanel({ data, refetch }: PanelProps) {
       </div>
 
       <div className="space-y-4 border-t border-foreground/10 pt-6">
-        <p className="eyebrow">Notifications</p>
+        <p className="eyebrow">Notifications & support</p>
         <FormField label="Admin notification email"><input value={f.admin_notification_email} onChange={(e) => setF({ ...f, admin_notification_email: e.target.value })} className={inputCls} /></FormField>
+        <FormField label="Support email (shown to customers)"><input value={f.support_email} onChange={(e) => setF({ ...f, support_email: e.target.value })} placeholder="support@example.com" className={inputCls} /></FormField>
+        <FormField label="WhatsApp number (with country code, e.g. 919999999999)"><input value={f.whatsapp_number} onChange={(e) => setF({ ...f, whatsapp_number: e.target.value })} placeholder="919999999999" className={inputCls} /></FormField>
         <p className="text-xs text-muted-foreground">
-          New orders send a notification here. Once the Resend connector is linked in the workspace, delivery is automatic.
+          New orders send an email to the admin address and a confirmation to the customer. The WhatsApp number powers the "Get help" button on the order confirmation page.
         </p>
       </div>
+
 
       <div className="flex justify-end border-t border-foreground/10 pt-6">
         <button onClick={save} disabled={saving} className="h-11 px-8 bg-foreground text-background text-[11px] uppercase tracking-widest hover:bg-primary disabled:opacity-50">

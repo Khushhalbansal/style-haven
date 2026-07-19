@@ -78,7 +78,9 @@ const productInput = z.object({
   sizes: z.array(z.string()).default([]),
   images: z.array(z.string()).default([]),
   is_active: z.boolean().default(true),
+  return_policy: z.string().nullable().optional(),
 });
+
 
 export const upsertProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -131,7 +133,10 @@ const settingsInput = z.object({
   homepage_category_ids: z.array(z.string().uuid()).default([]),
   admin_notification_email: z.string().email(),
   footer_tagline: z.string().nullable().optional(),
+  whatsapp_number: z.string().nullable().optional(),
+  support_email: z.string().nullable().optional(),
 });
+
 
 export const updateSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

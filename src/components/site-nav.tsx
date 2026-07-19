@@ -24,13 +24,16 @@ export function SiteNav({ brandName = "khushhal's boutique" }: { brandName?: str
           {brandName}
         </Link>
         <div className="flex gap-6 md:gap-8 text-[11px] uppercase tracking-[0.2em] font-medium justify-end min-w-0">
-          <Link to="/auth" className="hover:text-primary transition-colors hidden sm:inline">
-            {authed ? "Account" : "Sign in"}
-          </Link>
+          {authed ? (
+            <Link to="/account" className="hover:text-primary transition-colors hidden sm:inline">Account</Link>
+          ) : (
+            <Link to="/auth" className="hover:text-primary transition-colors hidden sm:inline">Sign in</Link>
+          )}
           <Link to="/cart" className="hover:text-primary transition-colors">
             Cart ({count})
           </Link>
         </div>
+
       </div>
     </nav>
   );
