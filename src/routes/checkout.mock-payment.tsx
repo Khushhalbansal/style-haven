@@ -24,6 +24,7 @@ export const Route = createFileRoute("/checkout/mock-payment")({
 interface OrderItem {
   name: string;
   size?: string | null;
+  color?: string | null;
   quantity: number;
   priceCents: number;
   lineTotalCents?: number;
@@ -134,7 +135,7 @@ function PaymentPage() {
               <div key={i} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {it.name}
-                  {it.size ? ` · ${it.size}` : ""} × {it.quantity}
+                  {it.size || it.color ? ` · ${[it.size, it.color].filter(Boolean).join(" / ")}` : ""} × {it.quantity}
                 </span>
                 <span className="font-mono">
                   {formatMoney(

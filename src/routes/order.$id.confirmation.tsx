@@ -17,6 +17,7 @@ interface OrderItem {
   priceCents: number;
   currency: string;
   size?: string | null;
+  color?: string | null;
   quantity: number;
   lineTotalCents?: number;
 }
@@ -178,9 +179,10 @@ function ConfirmationPage() {
                       {Array.isArray(order.items) &&
                         (order.items as unknown as OrderItem[]).map((it, idx) => (
                           <div key={idx} className="flex justify-between text-xs leading-relaxed">
-                            <span className="text-muted-foreground">
+                             <span className="text-muted-foreground">
                               {it.name}
                               {it.size ? ` · Size ${it.size}` : ""}
+                              {it.color ? ` · Color ${it.color}` : ""}
                               <span className="font-mono text-[10px] ml-1.5 text-foreground">
                                 ×{it.quantity}
                               </span>

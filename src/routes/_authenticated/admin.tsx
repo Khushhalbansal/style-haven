@@ -25,6 +25,7 @@ interface OrderItem {
   priceCents: number;
   currency: string;
   size?: string | null;
+  color?: string | null;
   quantity: number;
   lineTotalCents?: number;
 }
@@ -723,7 +724,7 @@ function OrdersPanel({ data, refetch }: PanelProps) {
                       <div key={i} className="flex justify-between">
                         <span>
                           {it.name}
-                          {it.size ? ` · ${it.size}` : ""} × {it.quantity}
+                          {it.size || it.color ? ` · ${[it.size, it.color].filter(Boolean).join(" / ")}` : ""} × {it.quantity}
                         </span>
                         <span className="font-mono">
                           {formatMoney(

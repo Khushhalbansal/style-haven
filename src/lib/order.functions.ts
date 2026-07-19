@@ -10,6 +10,7 @@ const itemSchema = z.object({
   priceCents: z.number().int().min(0),
   currency: z.string().min(1),
   size: z.string().optional(),
+  color: z.string().optional(),
   quantity: z.number().int().min(1),
 });
 
@@ -86,6 +87,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         productId: p.id,
         name: p.name,
         size: i.size ?? null,
+        color: i.color ?? null,
         quantity: i.quantity,
         priceCents: price,
         currency: p.currency,

@@ -65,6 +65,7 @@ function CheckoutPage() {
             priceCents: i.priceCents,
             currency: i.currency,
             size: i.size,
+            color: i.color,
             quantity: i.quantity,
           })),
         },

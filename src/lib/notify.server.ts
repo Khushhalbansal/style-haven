@@ -14,10 +14,14 @@ async function loadOrderAndSettings(orderId: string) {
 function renderRows(items: Array<Record<string, unknown>>, currency: string) {
   return items.map((i) => {
     const name = String(i.name ?? "");
-    const size = i.size ? ` (${i.size})` : "";
+    const sizeColorParts = [
+      i.size ? `Size: ${i.size}` : null,
+      i.color ? `Color: ${i.color}` : null,
+    ].filter(Boolean).join(", ");
+    const specs = sizeColorParts ? ` (${sizeColorParts})` : "";
     const qty = Number(i.quantity ?? 1);
     const total = Number(i.lineTotalCents ?? 0) / 100;
-    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee">${name}${size} × ${qty}</td><td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:right">${currency} ${total.toFixed(2)}</td></tr>`;
+    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee">${name}${specs} × ${qty}</td><td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:right">${currency} ${total.toFixed(2)}</td></tr>`;
   }).join("");
 }
 

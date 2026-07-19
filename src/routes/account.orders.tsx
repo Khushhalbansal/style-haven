@@ -12,6 +12,7 @@ interface OrderItem {
   priceCents: number;
   currency: string;
   size?: string | null;
+  color?: string | null;
   quantity: number;
   lineTotalCents?: number;
 }
@@ -131,7 +132,7 @@ function MyOrdersPage() {
                       {itemsArr.slice(0, 3).map((it, i) => (
                         <p key={i} className="text-xs text-muted-foreground">
                           {it.name}
-                          {it.size ? ` · ${it.size}` : ""} × {it.quantity}
+                          {it.size || it.color ? ` · ${[it.size, it.color].filter(Boolean).join(" / ")}` : ""} × {it.quantity}
                         </p>
                       ))}
                       {itemsArr.length > 3 ? (
