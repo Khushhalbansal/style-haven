@@ -149,8 +149,16 @@ function ProductPage() {
 
           <div className="mt-16 border-t border-foreground/10 pt-6 space-y-2">
             <p className="eyebrow">Shipped from studio</p>
-            <p className="text-xs text-muted-foreground">Free shipping on all orders. Returns within 14 days.</p>
+            <p className="text-xs text-muted-foreground">Free shipping on all orders.</p>
           </div>
+
+          {product.return_policy ? (
+            <div className="mt-6 border-t border-foreground/10 pt-6 space-y-2">
+              <p className="eyebrow">Return policy</p>
+              <p className="text-xs text-muted-foreground whitespace-pre-line">{product.return_policy}</p>
+            </div>
+          ) : null}
+
         </div>
       </div>
       <SiteFooter brandName={brandName} tagline={data?.settings?.footer_tagline} />
