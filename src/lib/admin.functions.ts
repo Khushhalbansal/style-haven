@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
-async function assertAdmin(ctx: { supabase: any; userId: string }) {
+async function assertAdmin(ctx: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data, error } = await ctx.supabase.rpc("is_admin", { _user_id: ctx.userId });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
@@ -22,7 +24,11 @@ export const adminGetOverview = createServerFn({ method: "GET" })
     const [products, categories, orders, admins, settings] = await Promise.all([
       context.supabase.from("products").select("*").order("created_at", { ascending: false }),
       context.supabase.from("categories").select("*").order("sort_order"),
-      context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(100),
+      context.supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100),
       context.supabase.from("admins").select("*").order("created_at"),
       context.supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
@@ -47,7 +53,7 @@ const categoryInput = z.object({
 
 export const upsertCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => categoryInput.parse(data))
+  .validator((data: unknown) => categoryInput.parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("categories").upsert(data);
@@ -57,7 +63,7 @@ export const upsertCategory = createServerFn({ method: "POST" })
 
 export const deleteCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("categories").delete().eq("id", data.id);
@@ -78,11 +84,12 @@ const productInput = z.object({
   sizes: z.array(z.string()).default([]),
   images: z.array(z.string()).default([]),
   is_active: z.boolean().default(true),
+  return_policy: z.string().optional().nullable(),
 });
 
 export const upsertProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => productInput.parse(data))
+  .validator((data: unknown) => productInput.parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("products").upsert(data);
@@ -92,7 +99,7 @@ export const upsertProduct = createServerFn({ method: "POST" })
 
 export const deleteProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("products").delete().eq("id", data.id);
@@ -103,15 +110,20 @@ export const deleteProduct = createServerFn({ method: "POST" })
 // ---------- Orders ----------
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]),
-    }).parse(data),
+  .validator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase.from("orders").update({ status: data.status }).eq("id", data.id);
+    const { error } = await context.supabase
+      .from("orders")
+      .update({ status: data.status })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -135,7 +147,7 @@ const settingsInput = z.object({
 
 export const updateSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => settingsInput.parse(data))
+  .validator((data: unknown) => settingsInput.parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase
@@ -149,17 +161,19 @@ export const updateSettings = createServerFn({ method: "POST" })
 // ---------- Admins ----------
 export const addAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ email: z.string().email() }).parse(data))
+  .validator((data: unknown) => z.object({ email: z.string().email() }).parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase.from("admins").insert({ email: data.email.toLowerCase() });
+    const { error } = await context.supabase
+      .from("admins")
+      .insert({ email: data.email.toLowerCase() });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const removeAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("admins").delete().eq("id", data.id);

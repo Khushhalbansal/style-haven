@@ -51,12 +51,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-8 flex justify-center gap-6">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest"
           >
             Try again
           </button>
-          <a href="/" className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest">
+          <a
+            href="/"
+            className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest"
+          >
             Home
           </a>
         </div>
@@ -71,9 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "khushhal's boutique — Editorial fashion" },
-      { name: "description", content: "khushhal's boutique — a study in structural fluidity and hand-woven textiles. Shop new arrivals, best sellers and upcoming drops." },
+      {
+        name: "description",
+        content:
+          "khushhal's boutique — a study in structural fluidity and hand-woven textiles. Shop new arrivals, best sellers and upcoming drops.",
+      },
       { property: "og:title", content: "khushhal's boutique" },
-      { property: "og:description", content: "Editorial fashion. New arrivals, best sellers, upcoming drops." },
+      {
+        property: "og:description",
+        content: "Editorial fashion. New arrivals, best sellers, upcoming drops.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

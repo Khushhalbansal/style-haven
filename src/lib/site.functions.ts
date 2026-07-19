@@ -10,7 +10,8 @@ function serverClient() {
     global: {
       fetch: (input, init) => {
         const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
+          h.delete("Authorization");
         h.set("apikey", key);
         return fetch(input, { ...init, headers: h });
       },
@@ -23,7 +24,11 @@ export const getSiteSnapshot = createServerFn({ method: "GET" }).handler(async (
   const [settingsRes, categoriesRes, productsRes] = await Promise.all([
     supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
     supabase.from("categories").select("*").eq("is_visible", true).order("sort_order"),
-    supabase.from("products").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+    supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false }),
   ]);
 
   return {

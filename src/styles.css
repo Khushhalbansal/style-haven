@@ -48,9 +48,9 @@
   --radius: 0.25rem;
 
   /* Editorial paper palette */
-  --paper: oklch(0.965 0.012 85);            /* warm off-white */
-  --ink: oklch(0.19 0.008 60);               /* deep charcoal */
-  --terracotta: oklch(0.66 0.16 40);         /* accent orange */
+  --paper: oklch(0.965 0.012 85); /* warm off-white */
+  --ink: oklch(0.19 0.008 60); /* deep charcoal */
+  --terracotta: oklch(0.66 0.16 40); /* accent orange */
 
   --background: var(--paper);
   --foreground: var(--ink);
@@ -106,7 +106,8 @@
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -118,13 +119,23 @@
 }
 
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @utility animate-marquee {
@@ -148,4 +159,34 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);
+}
+
+/* ── Mobile utilities ─────────────────────────────────────── */
+
+/* Safe area padding for sticky bottom bars on notched phones */
+@utility safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Prevent horizontal overflow globally */
+@layer base {
+  html {
+    overflow-x: hidden;
+  }
+  body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Ensure all interactive elements meet 44px minimum tap target */
+  button,
+  [role="button"],
+  a {
+    touch-action: manipulation;
+  }
+  /* Better text sizing on mobile — prevents iOS auto-zoom on inputs */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
 }

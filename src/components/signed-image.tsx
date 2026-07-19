@@ -22,13 +22,21 @@ export function SignedImage({ src, alt, className, bucket = "product-images", fa
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!src) { setUrl(""); return; }
+      if (!src) {
+        setUrl("");
+        return;
+      }
       const parsed = parseStorageRef(src, bucket);
-      if (!parsed.bucket) { setUrl(parsed.path); return; }
+      if (!parsed.bucket) {
+        setUrl(parsed.path);
+        return;
+      }
       const signed = await getSignedUrl(parsed.bucket, parsed.path);
       if (!cancelled) setUrl(signed);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [src, bucket]);
 
   if (!url) {

@@ -33,8 +33,9 @@ function Home() {
     productsByCategory.get(key)!.push(p);
   }
 
-  const orderedCatIds =
-    (settings?.homepage_category_ids?.length ? settings.homepage_category_ids : categories.map((c) => c.id));
+  const orderedCatIds = settings?.homepage_category_ids?.length
+    ? settings.homepage_category_ids
+    : categories.map((c) => c.id);
   const orderedCats = orderedCatIds
     .map((id) => categories.find((c) => c.id === id))
     .filter((c): c is (typeof categories)[number] => !!c);
@@ -44,13 +45,13 @@ function Home() {
       <SiteNav brandName={brandName} />
 
       {/* Hero */}
-      <header className="relative w-full min-h-[85vh] px-6 py-12 flex flex-col items-center justify-center overflow-hidden">
+      <header className="relative w-full min-h-[85vh] px-4 sm:px-6 py-10 sm:py-12 flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-[0.07] pointer-events-none flex items-center justify-center select-none">
           <span className="font-display text-[40vw] whitespace-nowrap leading-none tracking-tighter italic">
             {brandName.split(" ")[0]}
           </span>
         </div>
-        <div className="relative z-10 w-full max-w-6xl flex flex-col md:flex-row items-end gap-12 animate-reveal">
+        <div className="relative z-10 w-full max-w-6xl flex flex-col md:flex-row items-end gap-8 sm:gap-12 animate-reveal">
           <div className="flex-1 w-full">
             <div className="w-full aspect-[3/4] bg-stone-200 outline-1 -outline-offset-1 outline-black/5 overflow-hidden">
               <SignedImage
@@ -62,17 +63,21 @@ function Home() {
               />
             </div>
           </div>
-          <div className="w-full md:w-1/3 flex flex-col gap-6 pb-4 md:pb-12">
+          <div className="w-full md:w-1/3 flex flex-col gap-4 sm:gap-6 pb-0 md:pb-12">
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
               {settings?.hero_eyebrow ?? "Volume 04 / Issue 01"}
             </p>
-            <h1 className="font-display text-5xl lg:text-7xl leading-[0.9] text-balance tracking-tight italic">
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-7xl leading-[0.9] text-balance tracking-tight italic">
               {settings?.hero_headline ?? "The Soft Resistance"}
             </h1>
             <p className="text-sm text-muted-foreground max-w-[32ch] leading-relaxed">
-              {settings?.hero_subhead ?? "A study in structural fluidity and the tactile memory of hand-woven textiles."}
+              {settings?.hero_subhead ??
+                "A study in structural fluidity and the tactile memory of hand-woven textiles."}
             </p>
-            <a href="#collections" className="w-fit border-b border-foreground pb-1 text-[11px] uppercase tracking-widest font-medium hover:text-primary hover:border-primary transition-all">
+            <a
+              href="#collections"
+              className="w-fit border-b border-foreground pb-1 text-[11px] uppercase tracking-widest font-medium hover:text-primary hover:border-primary transition-all"
+            >
               Explore Collection
             </a>
           </div>
@@ -86,20 +91,31 @@ function Home() {
           const items = productsByCategory.get(cat.id) ?? [];
           if (!items.length) return null;
           return (
-            <section key={cat.id} className="px-6 py-24 max-w-7xl mx-auto">
-              <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
+            <section key={cat.id} className="px-4 sm:px-6 py-16 sm:py-24 max-w-7xl mx-auto">
+              <div className="flex justify-between items-end mb-8 sm:mb-12 flex-wrap gap-3">
                 <div>
                   <p className="eyebrow mb-2">Collection</p>
-                  <h2 className="font-display text-4xl md:text-5xl italic tracking-tight">{cat.name}</h2>
+                  <h2 className="font-display text-3xl sm:text-4xl md:text-5xl italic tracking-tight">
+                    {cat.name}
+                  </h2>
                   {cat.description ? (
                     <p className="mt-3 text-sm text-muted-foreground max-w-md">{cat.description}</p>
                   ) : null}
                 </div>
-                <span className="font-mono text-[10px] text-muted-foreground">
-                  ({String(items.length).padStart(2, "0")} ITEMS)
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    ({String(items.length).padStart(2, "0")} ITEMS)
+                  </span>
+                  <a
+                    href={`/category/${cat.slug}`}
+                    className="text-[10px] uppercase tracking-widest border-b border-foreground/40 pb-0.5 hover:text-primary hover:border-primary transition-colors hidden sm:inline"
+                  >
+                    View all
+                  </a>
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {/* 2 cols on mobile, 4 on md+ */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 {items.slice(0, 8).map((p, i) => (
                   <ProductCard
                     key={p.id}
@@ -109,9 +125,20 @@ function Home() {
                     currency={p.currency}
                     image={p.images?.[0]}
                     offset={i % 2 === 1}
+                    quantity={p.quantity}
                   />
                 ))}
               </div>
+              {items.length > 8 ? (
+                <div className="mt-8 sm:mt-10 text-center">
+                  <a
+                    href={`/category/${cat.slug}`}
+                    className="border-b border-foreground pb-1 text-[11px] uppercase tracking-widest hover:text-primary hover:border-primary transition-colors"
+                  >
+                    View all {items.length} pieces
+                  </a>
+                </div>
+              ) : null}
             </section>
           );
         })}
@@ -121,7 +148,8 @@ function Home() {
             <p className="eyebrow mb-4">The Studio</p>
             <h2 className="font-display text-4xl md:text-5xl italic">Curating the first drop</h2>
             <p className="mt-6 text-sm text-muted-foreground">
-              Products will appear here as the archive is populated. Sign in as an admin to add pieces.
+              Products will appear here as the archive is populated. Sign in as an admin to add
+              pieces.
             </p>
           </section>
         ) : null}

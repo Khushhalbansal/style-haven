@@ -19,7 +19,10 @@ export async function getSignedUrl(bucket: string, path: string): Promise<string
 }
 
 /** Storage path can be stored either as a bare path or a `bucket:path` string */
-export function parseStorageRef(ref: string, defaultBucket: string): { bucket: string; path: string } {
+export function parseStorageRef(
+  ref: string,
+  defaultBucket: string,
+): { bucket: string; path: string } {
   if (!ref) return { bucket: defaultBucket, path: "" };
   if (ref.startsWith("http://") || ref.startsWith("https://")) {
     return { bucket: "", path: ref };

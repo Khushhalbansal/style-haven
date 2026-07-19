@@ -130,6 +130,7 @@ export type Database = {
           quantity: number;
           sizes: string[];
           slug: string;
+          return_policy: string | null;
         };
         Insert: {
           category_id?: string | null;
@@ -144,6 +145,7 @@ export type Database = {
           quantity?: number;
           sizes?: string[];
           slug: string;
+          return_policy?: string | null;
         };
         Update: {
           category_id?: string | null;
@@ -158,6 +160,7 @@ export type Database = {
           quantity?: number;
           sizes?: string[];
           slug?: string;
+          return_policy?: string | null;
         };
         Relationships: [
           {

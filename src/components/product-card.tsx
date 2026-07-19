@@ -10,9 +10,21 @@ interface Props {
   image?: string;
   subtitle?: string | null;
   offset?: boolean;
+  quantity?: number;
 }
 
-export function ProductCard({ id, name, priceCents, currency, image, subtitle, offset }: Props) {
+export function ProductCard({
+  id,
+  name,
+  priceCents,
+  currency,
+  image,
+  subtitle,
+  offset,
+  quantity,
+}: Props) {
+  const outOfStock = quantity !== undefined && quantity <= 0;
+
   return (
     <Link
       to="/product/$id"
@@ -23,16 +35,26 @@ export function ProductCard({ id, name, priceCents, currency, image, subtitle, o
         <SignedImage
           src={image}
           alt={name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03] ${
+            outOfStock ? "opacity-50" : ""
+          }`}
         />
-        <span className="absolute bottom-2 left-2 text-[10px] uppercase tracking-widest text-background bg-foreground/70 px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          Quick Shop
-        </span>
+        {outOfStock ? (
+          <span className="absolute top-2 left-2 text-[9px] uppercase tracking-[0.2em] font-mono text-background bg-neutral-900 px-2.5 py-1">
+            Sold out
+          </span>
+        ) : (
+          <span className="absolute bottom-2 left-2 text-[10px] uppercase tracking-widest text-background bg-foreground/70 px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            Quick Shop
+          </span>
+        )}
       </div>
       <div className="flex justify-between items-start">
         <div>
           <h3 className="text-xs font-medium uppercase tracking-wider mb-1">{name}</h3>
-          {subtitle ? <p className="font-mono text-[10px] text-muted-foreground">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="font-mono text-[10px] text-muted-foreground">{subtitle}</p>
+          ) : null}
         </div>
         <span className="text-xs font-medium">{formatMoney(priceCents, currency)}</span>
       </div>

@@ -265,6 +265,7 @@ function ProductForm({
   const [sizesText, setSizesText] = useState((initial.sizes ?? []).join(", "));
   const [images, setImages] = useState<string[]>(initial.images ?? []);
   const [isActive, setIsActive] = useState(initial.is_active ?? true);
+  const [returnPolicy, setReturnPolicy] = useState(initial.return_policy ?? "");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -306,6 +307,7 @@ function ProductForm({
             .filter(Boolean),
           images,
           is_active: isActive,
+          return_policy: returnPolicy.trim() || null,
         },
       });
       toast.success("Product saved");
@@ -404,6 +406,28 @@ function ProductForm({
             onChange={(e) => setSizesText(e.target.value)}
             placeholder="S, M, L, XL"
             className={inputCls}
+          />
+        </FormField>
+
+        <FormField label="Return Policy">
+          <select
+            value={returnPolicy}
+            onChange={(e) => setReturnPolicy(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">— no return policy —</option>
+            <option value="7-day return & replacement">7-day return &amp; replacement</option>
+            <option value="7-day replacement only">7-day replacement only</option>
+            <option value="14-day return & replacement">14-day return &amp; replacement</option>
+            <option value="14-day replacement only">14-day replacement only</option>
+            <option value="30-day return & replacement">30-day return &amp; replacement</option>
+            <option value="No returns — final sale">No returns — final sale</option>
+          </select>
+          <input
+            value={returnPolicy}
+            onChange={(e) => setReturnPolicy(e.target.value)}
+            placeholder="Or type a custom policy…"
+            className={`${inputCls} mt-2`}
           />
         </FormField>
 

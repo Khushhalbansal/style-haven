@@ -12,7 +12,7 @@ export interface CartItem {
 
 const KEY = "kb.cart.v1";
 
-function read(): CartItem[] {
+function readFromLocalStorage(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(KEY);
@@ -24,15 +24,32 @@ function read(): CartItem[] {
   }
 }
 
+let cachedCart: CartItem[] = [];
+
+if (typeof window !== "undefined") {
+  cachedCart = readFromLocalStorage();
+}
+
+function getSnapshot(): CartItem[] {
+  return cachedCart;
+}
+
 function write(items: CartItem[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(KEY, JSON.stringify(items));
+  cachedCart = items;
   window.dispatchEvent(new Event("kb-cart-change"));
 }
 
 function subscribe(cb: () => void) {
   if (typeof window === "undefined") return () => {};
-  const handler = () => cb();
+  const handler = () => {
+    const latest = readFromLocalStorage();
+    if (JSON.stringify(cachedCart) !== JSON.stringify(latest)) {
+      cachedCart = latest;
+    }
+    cb();
+  };
   window.addEventListener("kb-cart-change", handler);
   window.addEventListener("storage", handler);
   return () => {
@@ -41,16 +58,18 @@ function subscribe(cb: () => void) {
   };
 }
 
+const EMPTY_ARRAY: CartItem[] = [];
+
 export function useCart() {
-  const items = useSyncExternalStore(subscribe, read, () => []);
+  const items = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY_ARRAY);
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => { setHydrated(true); }, []);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const add = useCallback((item: CartItem) => {
-    const current = read();
-    const existing = current.find(
-      (i) => i.productId === item.productId && i.size === item.size,
-    );
+    const current = [...getSnapshot()];
+    const existing = current.find((i) => i.productId === item.productId && i.size === item.size);
     if (existing) {
       existing.quantity += item.quantity;
     } else {
@@ -60,11 +79,11 @@ export function useCart() {
   }, []);
 
   const remove = useCallback((productId: string, size?: string) => {
-    write(read().filter((i) => !(i.productId === productId && i.size === size)));
+    write(getSnapshot().filter((i) => !(i.productId === productId && i.size === size)));
   }, []);
 
   const updateQty = useCallback((productId: string, size: string | undefined, qty: number) => {
-    const next = read()
+    const next = getSnapshot()
       .map((i) => (i.productId === productId && i.size === size ? { ...i, quantity: qty } : i))
       .filter((i) => i.quantity > 0);
     write(next);
