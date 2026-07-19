@@ -82,6 +82,7 @@ const productInput = z.object({
   currency: z.string().default("INR"),
   quantity: z.number().int().min(0),
   sizes: z.array(z.string()).default([]),
+  colors: z.array(z.string()).default([]),
   images: z.array(z.string()).default([]),
   is_active: z.boolean().default(true),
   return_policy: z.string().optional().nullable(),

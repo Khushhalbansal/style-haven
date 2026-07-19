@@ -263,6 +263,7 @@ function ProductForm({
   const [quantity, setQuantity] = useState(initial.quantity ?? 1);
   const [categoryId, setCategoryId] = useState(initial.category_id ?? categories[0]?.id ?? "");
   const [sizesText, setSizesText] = useState((initial.sizes ?? []).join(", "));
+  const [colorsText, setColorsText] = useState((initial.colors ?? []).join(", "));
   const [images, setImages] = useState<string[]>(initial.images ?? []);
   const [isActive, setIsActive] = useState(initial.is_active ?? true);
   const [returnPolicy, setReturnPolicy] = useState(initial.return_policy ?? "");
@@ -303,6 +304,10 @@ function ProductForm({
           quantity: Number(quantity),
           category_id: categoryId || null,
           sizes: sizesText
+            .split(",")
+            .map((s: string) => s.trim())
+            .filter(Boolean),
+          colors: colorsText
             .split(",")
             .map((s: string) => s.trim())
             .filter(Boolean),
@@ -408,6 +413,15 @@ function ProductForm({
             value={sizesText}
             onChange={(e) => setSizesText(e.target.value)}
             placeholder="S, M, L, XL"
+            className={inputCls}
+          />
+        </FormField>
+
+        <FormField label="Colors (comma-separated, e.g. 'Ink Black:#0a0a0a, Sand:#e8d8c8')">
+          <input
+            value={colorsText}
+            onChange={(e) => setColorsText(e.target.value)}
+            placeholder="Black:#000000, Sand:#e8d8c8"
             className={inputCls}
           />
         </FormField>
