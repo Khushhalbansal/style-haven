@@ -6,6 +6,7 @@ export interface CartItem {
   priceCents: number;
   currency: string;
   size?: string;
+  color?: string;
   image?: string;
   quantity: number;
 }
@@ -69,7 +70,9 @@ export function useCart() {
 
   const add = useCallback((item: CartItem) => {
     const current = [...getSnapshot()];
-    const existing = current.find((i) => i.productId === item.productId && i.size === item.size);
+    const existing = current.find(
+      (i) => i.productId === item.productId && i.size === item.size && i.color === item.color
+    );
     if (existing) {
       existing.quantity += item.quantity;
     } else {
@@ -78,13 +81,15 @@ export function useCart() {
     write(current);
   }, []);
 
-  const remove = useCallback((productId: string, size?: string) => {
-    write(getSnapshot().filter((i) => !(i.productId === productId && i.size === size)));
+  const remove = useCallback((productId: string, size?: string, color?: string) => {
+    write(getSnapshot().filter((i) => !(i.productId === productId && i.size === size && i.color === color)));
   }, []);
 
-  const updateQty = useCallback((productId: string, size: string | undefined, qty: number) => {
+  const updateQty = useCallback((productId: string, size: string | undefined, color: string | undefined, qty: number) => {
     const next = getSnapshot()
-      .map((i) => (i.productId === productId && i.size === size ? { ...i, quantity: qty } : i))
+      .map((i) =>
+        i.productId === productId && i.size === size && i.color === color ? { ...i, quantity: qty } : i
+      )
       .filter((i) => i.quantity > 0);
     write(next);
   }, []);

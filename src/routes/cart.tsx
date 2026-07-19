@@ -88,9 +88,12 @@ function CartPage() {
                             <h3 className="text-xs sm:text-sm font-medium uppercase tracking-wider leading-snug">
                               {it.name}
                             </h3>
-                            {it.size ? (
+                            {it.size || it.color ? (
                               <p className="font-mono text-[10px] text-muted-foreground mt-1">
-                                Size {it.size}
+                                {[
+                                  it.size ? `Size ${it.size}` : null,
+                                  it.color ? `Color ${it.color}` : null,
+                                ].filter(Boolean).join(" · ")}
                               </p>
                             ) : null}
                             {stockWarning ? (
@@ -110,7 +113,7 @@ function CartPage() {
                               <button
                                 disabled={it.quantity <= 1}
                                 onClick={() =>
-                                  updateQty(it.productId, it.size, Math.max(1, it.quantity - 1))
+                                  updateQty(it.productId, it.size, it.color, Math.max(1, it.quantity - 1))
                                 }
                                 className="w-11 h-11 flex items-center justify-center text-lg disabled:opacity-30"
                                 aria-label="Decrease"
@@ -122,7 +125,7 @@ function CartPage() {
                               </span>
                               <button
                                 disabled={it.quantity >= maxQty}
-                                onClick={() => updateQty(it.productId, it.size, it.quantity + 1)}
+                                onClick={() => updateQty(it.productId, it.size, it.color, it.quantity + 1)}
                                 className="w-11 h-11 flex items-center justify-center text-lg disabled:opacity-30"
                                 aria-label="Increase"
                               >
@@ -130,7 +133,7 @@ function CartPage() {
                               </button>
                             </div>
                             <button
-                              onClick={() => remove(it.productId, it.size)}
+                              onClick={() => remove(it.productId, it.size, it.color)}
                               className="min-h-[44px] px-1 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
                             >
                               Remove

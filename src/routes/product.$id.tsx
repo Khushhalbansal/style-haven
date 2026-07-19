@@ -30,6 +30,7 @@ function ProductPage() {
   const brandName = data?.settings?.brand_name ?? "khushhal's boutique";
 
   const [size, setSize] = useState<string | undefined>();
+  const [color, setColor] = useState<string | undefined>();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
@@ -51,6 +52,13 @@ function ProductPage() {
     );
   }
 
+  const colorsParsed = (product.colors ?? []).map((c: string) => {
+    const parts = c.split(":");
+    const name = parts[0]?.trim() || "Unknown";
+    const hex = parts[1]?.trim() || "#cccccc";
+    return { raw: c, name, hex };
+  });
+
   const category = data?.categories.find((c) => c.id === product.category_id);
   const outOfStock = product.quantity <= 0;
 
@@ -59,12 +67,17 @@ function ProductPage() {
       toast.error("Please select a size");
       return;
     }
+    if (colorsParsed.length > 0 && !color) {
+      toast.error("Please select a color");
+      return;
+    }
     add({
       productId: product.id,
       name: product.name,
       priceCents: product.price_cents,
       currency: product.currency,
       size,
+      color,
       image: product.images?.[0],
       quantity: qty,
     });
@@ -131,6 +144,40 @@ function ProductPage() {
             <p className="mt-6 sm:mt-8 text-sm leading-relaxed text-muted-foreground whitespace-pre-line max-w-md">
               {product.description}
             </p>
+          ) : null}
+
+          {/* Color selector */}
+          {colorsParsed.length > 0 ? (
+            <div className="mt-8 sm:mt-10">
+              <p className="eyebrow mb-3">
+                Color
+                {color ? <span className="normal-case text-muted-foreground font-mono text-[10px] ml-2">({color})</span> : null}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {colorsParsed.map((c) => (
+                  <button
+                    key={c.raw}
+                    type="button"
+                    onClick={() => setColor(c.name)}
+                    className={`w-10 h-10 rounded-full border border-foreground/10 transition-all flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                      color === c.name ? "ring-2 ring-offset-2 ring-foreground" : ""
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                    aria-label={`Select color ${c.name}`}
+                    aria-pressed={color === c.name}
+                  >
+                    {color === c.name && (
+                      <span
+                        className="w-2.5 h-2.5 rounded-full bg-white shadow-sm"
+                        style={{
+                          filter: c.hex.toLowerCase() === "#ffffff" ? "invert(1)" : "none",
+                        }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
 
           {/* Size selector */}
