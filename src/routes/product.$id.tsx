@@ -106,7 +106,28 @@ function ProductPage() {
               {product.images.map((img, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveImg(i)}
+                  onClick={() => {
+                    setActiveImg(i);
+                    const img = product.images[i];
+                    if (img) {
+                      const lowerImg = img.toLowerCase();
+                      const matchingColor = colorsParsed.find((c) => {
+                        const cleanedColor = c.name.toLowerCase().replace(/\s+/g, "");
+                        const cleanedColorHyphen = c.name.toLowerCase().replace(/\s+/g, "-");
+                        const colorNameParts = c.name.toLowerCase().split(/\s+/);
+                        return (
+                          lowerImg.includes(cleanedColor) ||
+                          lowerImg.includes(cleanedColorHyphen) ||
+                          colorNameParts.some((part) => part.length > 2 && lowerImg.includes(part))
+                        );
+                      });
+                      if (matchingColor) {
+                        setColor(matchingColor.name);
+                      } else if (i < colorsParsed.length) {
+                        setColor(colorsParsed[i].name);
+                      }
+                    }
+                  }}
                   className={`aspect-square bg-stone-100 overflow-hidden min-h-[44px] ${
                     activeImg === i ? "outline outline-2 outline-primary" : ""
                   }`}
@@ -158,7 +179,26 @@ function ProductPage() {
                   <button
                     key={c.raw}
                     type="button"
-                    onClick={() => setColor(c.name)}
+                    onClick={() => {
+                      setColor(c.name);
+                      const cleanedColor = c.name.toLowerCase().replace(/\s+/g, "");
+                      const cleanedColorHyphen = c.name.toLowerCase().replace(/\s+/g, "-");
+                      const colorNameParts = c.name.toLowerCase().split(/\s+/);
+                      let matchIdx = product.images.findIndex((img) => {
+                        const lowerImg = img.toLowerCase();
+                        return (
+                          lowerImg.includes(cleanedColor) ||
+                          lowerImg.includes(cleanedColorHyphen) ||
+                          colorNameParts.some((part) => part.length > 2 && lowerImg.includes(part))
+                        );
+                      });
+                      if (matchIdx === -1 && colorsParsed.findIndex((cp) => cp.name === c.name) < product.images.length) {
+                        matchIdx = colorsParsed.findIndex((cp) => cp.name === c.name);
+                      }
+                      if (matchIdx !== -1) {
+                        setActiveImg(matchIdx);
+                      }
+                    }}
                     className={`w-10 h-10 rounded-full border border-foreground/10 transition-all flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
                       color === c.name ? "ring-2 ring-offset-2 ring-foreground" : ""
                     }`}
