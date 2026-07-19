@@ -87,6 +87,7 @@ const productInput = z.object({
   return_policy: z.string().optional().nullable(),
 });
 
+
 export const upsertProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => productInput.parse(data))
@@ -143,7 +144,10 @@ const settingsInput = z.object({
   homepage_category_ids: z.array(z.string().uuid()).default([]),
   admin_notification_email: z.string().email(),
   footer_tagline: z.string().nullable().optional(),
+  whatsapp_number: z.string().nullable().optional(),
+  support_email: z.string().nullable().optional(),
 });
+
 
 export const updateSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

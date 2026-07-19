@@ -269,6 +269,7 @@ function ProductForm({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+
   async function uploadImage(file: File) {
     setUploading(true);
     try {
@@ -310,6 +311,7 @@ function ProductForm({
           return_policy: returnPolicy.trim() || null,
         },
       });
+
       toast.success("Product saved");
       onSaved();
     } catch (e) {
@@ -458,6 +460,10 @@ function ProductForm({
               />
             </label>
           </div>
+        </FormField>
+
+        <FormField label='Return policy (e.g. "7-day return, replacement only")'>
+          <textarea value={returnPolicy} onChange={(e) => setReturnPolicy(e.target.value)} rows={3} placeholder="Shown on the product page. Leave blank to hide." className={inputCls} />
         </FormField>
 
         <label className="flex items-center gap-3 text-xs uppercase tracking-widest">
@@ -781,7 +787,10 @@ function SettingsPanel({ data, refetch }: PanelProps) {
     homepage_category_ids: s.homepage_category_ids ?? [],
     admin_notification_email: s.admin_notification_email ?? "",
     footer_tagline: s.footer_tagline ?? "",
+    whatsapp_number: (s as any).whatsapp_number ?? "",
+    support_email: (s as any).support_email ?? "",
   });
+
   const [saving, setSaving] = useState(false);
 
   async function uploadTo(file: File, field: "logo_url" | "hero_image_url" | "upcoming_image_url") {
@@ -1068,6 +1077,7 @@ function SettingsPanel({ data, refetch }: PanelProps) {
           delivery is automatic.
         </p>
       </div>
+
 
       <div className="flex justify-end border-t border-foreground/10 pt-6">
         <button

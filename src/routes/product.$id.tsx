@@ -194,6 +194,14 @@ function ProductPage() {
               <p className="text-xs text-muted-foreground">{product.return_policy}.</p>
             ) : null}
           </div>
+
+          {product.return_policy ? (
+            <div className="mt-6 border-t border-foreground/10 pt-6 space-y-2">
+              <p className="eyebrow">Return policy</p>
+              <p className="text-xs text-muted-foreground whitespace-pre-line">{product.return_policy}</p>
+            </div>
+          ) : null}
+
         </div>
       </div>
 
